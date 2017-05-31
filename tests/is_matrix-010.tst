@@ -1,0 +1,1 @@
+../inputs/not-rectangular-04.ssv

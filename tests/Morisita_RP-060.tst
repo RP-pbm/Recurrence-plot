@@ -1,0 +1,1 @@
+../inputs/sqrt-02.ssv
