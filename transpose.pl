@@ -78,7 +78,7 @@ for (@ARGV){
 		}		
 	}
 
-	print for @pbm_header;
+	print map "$_\n", join ' ', reverse split for @pbm_header;
 	do { local $\ = $/; print join $join, @{$_} } for @data;
 }
 
