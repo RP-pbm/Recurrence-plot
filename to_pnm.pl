@@ -20,6 +20,8 @@ my $maxval = 0;
 my $maxproc;
 my $findmax = 0;
 my $treshold = 0;
+my $gt_treshold = 1;
+my $ge_treshold = 0;
 
 for (@opt){
 	/-topbm/ and do {
@@ -36,6 +38,14 @@ for (@opt){
 	};
 	/-treshold([\d.]+)/ and do {
 		$treshold = $1;
+	};
+	/-gt/ and do {
+		$gt_treshold = 1;
+		$ge_treshold = 0;
+	};
+	/-ge/ and do {
+		$gt_treshold = 0;
+		$ge_treshold = 1;
 	};
 	/-max([\d.]+)%/ and do {
 		$maxproc = $1;
@@ -98,7 +108,12 @@ for (@FILES){
 		print join "$join",
 			map {
 				$to_pbm ?
-					( $_ > $treshold ? 1 : 0 )
+					( 
+						$gt_treshold ?
+							( $_ > $treshold ? 1 : 0 )
+							:
+							( $_ >= $treshold ? 1 : 0 )
+					)
 				:
 					( 255 - int 255 * $_ / $maxval )
 			} @{$_};
