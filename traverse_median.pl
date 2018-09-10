@@ -18,6 +18,7 @@ my $pbm = 0;
 my $to_pbm = 0;  # not relevant
 my $to_pgm = 0;
 my $to_ppm = 0;
+my $recursive = 0;
 my $row_step = 10;
 my $col_step = 10;
 my $step_proc_on = 1;
@@ -35,6 +36,9 @@ for (@opt){
 	};
 	/-toppm/ and do {
 		$to_ppm = 1;
+	};
+	/-recursive/ and do {
+		$recursive = 1;
 	};
 	/-stepproc(\d+)/ and do {
 		$step_proc_on = 1;
@@ -101,71 +105,135 @@ for (@FILES){
 		( $rows, $cols ) = ( 0 + @data, 0 + split /$split/, $data[0] );
 	}
 	
-	if( $step_proc_on ){
-		$row_step = $rows * $step_proc / 100;
-		$col_step = $cols * $step_proc / 100;
-	}
-
 	@data = map { [ split /$split/ ] } @data;
 	
-	my $grey_on_empty = 'g';
-	my $grey_on_reccurence = 'G';
-	my $median_on_empty = 'm';
-	my $median_on_reccurence = 'M';
-
 	$debug and print "@{$_}\n" for @data;
 	$debug and print "---\n";
-
+	
 	@data = reverse @data;
 	
-	my( $x, $y ) = ( 0, 0 );
 	my @coords;
 	
-	while( $x < $rows and $y < $cols ){
-	$debug and print "$x < $rows and $y < $cols\n";
-		
-		my( @rows, @cols );
-		
-		for my $row ($x .. $x - 1 + $row_step){
-			$row > $rows - 1 and next;
-			for my $col ($y .. $y - 1 + $col_step){
-				$col > $cols - 1 and next;
-				if( $data[ $row ][ $col ] =~ /1|$grey_on_reccurence/ ){
-					push @rows, $row;
-					push @cols, $col;
-					}
-				$data[ $row ][ $col ] eq 0
-					and $data[ $row ][ $col ] = $grey_on_empty;
-				$data[ $row ][ $col ] eq 1 
-					and $data[ $row ][ $col ] = $grey_on_reccurence;
-				}
-			}
-		
-		$debug and do { print "@{$_}\n" for reverse @data };
-		
-		if( !@rows ){
-			( $x, $y ) = ( $x + $row_step, $y + $col_step );
-			next;
-			}
-		
-		@rows = sort {$a <=> $b} @rows;
-		@cols = sort {$a <=> $b} @cols;
-		
-		my $median_row = @rows % 2 ? $rows[ @rows / 2 ] 
-			: ( $rows[ @rows / 2 - 1 ] + $rows[ @rows / 2 ] ) >> 1;
-			
-		my $median_col = @cols % 2 ? $cols[ @cols / 2 ] 
-			: ( $cols[ @cols / 2 - 1 ] + $cols[ @cols / 2 ] ) >> 1;
-		
-		$data[ $median_row ][ $median_col ] =~ s/$grey_on_empty/$median_on_empty/ ||
-		$data[ $median_row ][ $median_col ] =~ s/$grey_on_reccurence/$median_on_reccurence/;
-		
-		$debug and print "(rows:@rows|cols:@cols)"
-			. "[median_row:$median_row][median_col:$median_col]\n";
-		
-		push @coords, [ $median_row, $median_col ];
-		( $x, $y ) = ( $median_row + 1, $median_col + 1 );
+	my $window_on_empty = 'v';
+	my $window_on_recurrence = 'W';
+	my $median_on_empty = 'n';
+	my $median_on_recurrence = 'M';
 	
+	if( !$recursive ){
+		
+		if( $step_proc_on ){
+			$row_step = $rows * $step_proc / 100;
+			$col_step = $cols * $step_proc / 100;
+		}
+		
+		my( $x, $y ) = ( 0, 0 );
+		
+		while( $x < $rows and $y < $cols ){
+		$debug and print "$x < $rows and $y < $cols\n";
+			
+			my( @rows, @cols );
+			
+			my %convert = (
+				0 => $window_on_empty,
+				1 => $window_on_recurrence,
+				$window_on_empty => $window_on_empty,
+				$window_on_recurrence => $window_on_recurrence,
+			);
+			
+			for my $row ( $x .. $x - 1 + $row_step ){
+				$row > $rows - 1 and next;
+				for my $col ( $y .. $y - 1 + $col_step ){
+					$col > $cols - 1 and next;
+					if( $data[ $row ][ $col ] =~ /1|$window_on_recurrence/ ){
+						push @rows, $row;
+						push @cols, $col;
+						}
+					
+					$data[ $row ][ $col ] = $convert{ $data[ $row ][ $col ] };
+					}
+				}
+			
+			$debug and do { print "@{$_}\n" for reverse @data };
+			
+			if( !@rows ){
+				( $x, $y ) = ( $x + $row_step, $y + $col_step );
+				next;
+				}
+			
+			my $median_row = median( @rows );
+			my $median_col = median( @cols );
+			
+			%convert = (
+				$window_on_empty => $median_on_empty,
+				$window_on_recurrence => $median_on_recurrence,
+			);
+			
+			$data[ $median_row ][ $median_col ] = 
+				$convert{ $data[ $median_row ][ $median_col ] }; 
+			
+			$debug and print "(rows:@rows|cols:@cols)"
+				. "[median_row:$median_row][median_col:$median_col]\n";
+			
+			push @coords, [ $median_row, $median_col ];
+			( $x, $y ) = ( $median_row + 1, $median_col + 1 );
+		
+		}
+		
+	}
+	else{  # divide and conquire
+		my @UDLR = [ 0, $rows - 1, 0, $cols - 1 ];
+		
+		while( @UDLR ){
+			my( $U, $D, $L, $R ) = @{ shift @UDLR };
+			
+			$debug and print "[ $U, $D, $L, $R ]\n";
+			
+			my( @rows, @cols );
+			
+			my %convert = (
+				0 => $window_on_empty,
+				1 => $window_on_recurrence,
+				$window_on_empty => 0,
+				$window_on_recurrence => 1,
+			);
+			
+			for my $row ( $U .. $D ){
+				for my $col ( $L .. $R ){
+					
+					if( $data[ $row ][ $col ] =~ /1|$window_on_recurrence/ ){
+						push @rows, $row;
+						push @cols, $col;
+						}
+					
+					$data[ $row ][ $col ] = $convert{ $data[ $row ][ $col ] }; 
+					}
+				}
+			
+			next if !@rows || !@cols;
+			
+			my $median_row = median( @rows );
+			my $median_col = median( @cols );
+			
+			%convert = (
+				$window_on_empty => $median_on_empty,
+				$window_on_recurrence => $median_on_recurrence,
+				0 => $median_on_empty,
+				1 => $median_on_recurrence,
+			);
+			
+			$data[ $median_row ][ $median_col ] = 
+				$convert{ $data[ $median_row ][ $median_col ] };
+			
+			$debug and print "(rows:@rows|cols:@cols)"
+				. "[median_row:$median_row][median_col:$median_col]\n";
+			
+			push @UDLR, [ $U, $median_row - 1, $L, $median_col - 1 ],
+						[ $median_row + 1, $D, $median_col + 1, $R ];
+			
+			push @coords, [ $median_row, $median_col ];
+		}
+		
+		@coords = sort { $a->[ 0 ] <=> $b->[ 0 ] } @coords;
 	}
 	
 	@data = reverse @data;
@@ -173,11 +241,11 @@ for (@FILES){
 	if( $to_pgm ){
 		my %convert = (
 			0 => 255,
-			1 => 180,
-			$grey_on_empty => 210,
-			$grey_on_reccurence => 150,
-			$median_on_empty => 230,
-			$median_on_reccurence => 0,
+			1 => 170,
+			$window_on_empty => 200,
+			$window_on_recurrence => 140,
+			$median_on_empty => 220,
+			$median_on_recurrence => 0,
 		);
 		for( @data ){
 			map { $_ = $convert{ $_ } } @{$_};
@@ -187,11 +255,11 @@ for (@FILES){
 	if( $to_ppm ){
 		my %convert = (
 			0 => '255 255 255',
-			1 => '180 180 180',
-			$grey_on_empty => '150 210 210',
-			$grey_on_reccurence => '100 150 150',
+			1 => '170 170 170',
+			$window_on_empty => '150 200 200',
+			$window_on_recurrence => '100 140 140',
 			$median_on_empty => '0 255 255',
-			$median_on_reccurence => '0 0 0',
+			$median_on_recurrence => '0 0 0',
 		);
 		for( @data ){
 			map { $_ = $convert{ $_ } } @{$_};
@@ -216,10 +284,20 @@ for (@FILES){
 	}
 	
 	print do { local $" = $join; "@{$_}\n" } for @data;
-
+	
 	if( !$to_pgm and !$to_ppm ){
 		print map "[$_]", join ',', map "($_)", 
 			map { join ',', map $_ + 1, @{$_} } @coords;
 		print "\n";
 	}
 }
+
+sub median {
+	my $ref = \@_;
+	my @arr = sort { $a <=> $b } @{ $ref };
+	
+	my $median = @arr % 2 ? $arr[ @arr / 2 ] 
+		: ( $arr[ @arr / 2 - 1 ] + $arr[ @arr / 2 ] ) >> 1;
+	
+	$median;
+	}
