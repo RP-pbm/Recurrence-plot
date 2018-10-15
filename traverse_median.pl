@@ -18,6 +18,7 @@ my $pbm = 0;
 my $to_pbm = 0;  # not relevant
 my $to_pgm = 0;
 my $to_ppm = 0;
+my $make_gif = 0;
 my $recursive = 0;
 my $row_step = 10;
 my $col_step = 10;
@@ -37,7 +38,10 @@ for (@opt){
 	/-toppm/ and do {
 		$to_ppm = 1;
 	};
-	/-recursive/ and do {
+	/-gif/ and do {
+		$make_gif = 1;
+	};
+	/-(recursive|DnC)/i and do {
 		$recursive = 1;
 	};
 	/-stepproc(\d+)/ and do {
@@ -119,7 +123,9 @@ for (@FILES){
 	my $median_on_empty = 'n';
 	my $median_on_recurrence = 'M';
 	
-	if( !$recursive ){
+	my @gif;
+	
+	if( !$recursive ){ # moving window
 		
 		if( $step_proc_on ){
 			$row_step = $rows * $step_proc / 100;
@@ -127,6 +133,8 @@ for (@FILES){
 		}
 		
 		my( $x, $y ) = ( 0, 0 );
+		
+		my $i = 0;
 		
 		while( $x < $rows and $y < $cols ){
 		$debug and print "$x < $rows and $y < $cols\n";
@@ -153,8 +161,6 @@ for (@FILES){
 					}
 				}
 			
-			$debug and do { print "@{$_}\n" for reverse @data };
-			
 			if( !@rows ){
 				( $x, $y ) = ( $x + $row_step, $y + $col_step );
 				next;
@@ -176,12 +182,19 @@ for (@FILES){
 			
 			push @coords, [ $median_row, $median_col ];
 			( $x, $y ) = ( $median_row + 1, $median_col + 1 );
-		
+			
+			if( $make_gif ){
+				push @{ $gif[ $i ] }, [ @{ $_ } ] for reverse @data;
+			}
+			
+			$i ++;
 		}
 		
 	}
 	else{  # divide and conquire
 		my @UDLR = [ 0, $rows - 1, 0, $cols - 1 ];
+		
+		my $i = 0;
 		
 		while( @UDLR ){
 			my( $U, $D, $L, $R ) = @{ shift @UDLR };
@@ -231,6 +244,12 @@ for (@FILES){
 						[ $median_row + 1, $D, $median_col + 1, $R ];
 			
 			push @coords, [ $median_row, $median_col ];
+			
+			if( $make_gif ){
+				push @{ $gif[ $i ] }, [ @{ $_ } ] for reverse @data;
+			}
+			
+			$i ++;
 		}
 		
 		@coords = sort { $a->[ 0 ] <=> $b->[ 0 ] } @coords;
@@ -250,6 +269,11 @@ for (@FILES){
 		for( @data ){
 			map { $_ = $convert{ $_ } } @{$_};
 		}
+		for my $gif ( @gif ){
+			for( @{ $gif } ){
+				map { $_ = $convert{ $_ } } @{ $_ };
+				}
+			}
 	}
 	
 	if( $to_ppm ){
@@ -264,6 +288,11 @@ for (@FILES){
 		for( @data ){
 			map { $_ = $convert{ $_ } } @{$_};
 		}
+		for my $gif ( @gif ){
+			for( @{ $gif } ){
+				map { $_ = $convert{ $_ } } @{ $_ };
+				}
+			}
 	}
 	
 	if( $to_pbm ){  # not relevant
@@ -283,13 +312,28 @@ for (@FILES){
 		print 255, "\n";
 	}
 	
-	print do { local $" = $join; "@{$_}\n" } for @data;
-	
-	if( !$to_pgm and !$to_ppm ){
+	if( $to_pgm or $to_ppm ){
+		print do { local $" = $join; "@{$_}\n" } for @data;
+	}
+	else{
 		print map "[$_]", join ',', map "($_)", 
 			map { join ',', map $_ + 1, @{$_} } @coords;
 		print "\n";
 	}
+	
+	if( $make_gif ){
+		my $i = 0;
+		for my $gif ( @gif ){
+			my $filename = "gif_" . ( sprintf "%02d", $i ++ ) . 
+				( $to_pgm ? ".pgm" : "" ) . ( $to_ppm ? ".ppm" : "" );
+			open my $out, '>', $filename or die "$0: Can't create $filename!\n";
+			print $out ( $to_pgm ? "P2\n" : "" ) . ( $to_ppm ? "P3\n" : "" );
+			print $out $cols, ' ', $rows, "\n";
+			print $out 255, "\n";
+			print $out do { local $" = $join; "@{$_}\n" } for @{ $gif };
+			close $out;
+			}
+		}
 }
 
 sub median {
