@@ -8,15 +8,15 @@ my $debug = 0;
 my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @FILES, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $split = " ";
 my $pbm = 0;
 my $to_pbm = 0;
 
-for (@opt){
+for( @opt ){
 	/-pbm/ and do {
 		$pbm = 1;
 	};
@@ -40,10 +40,10 @@ for (@opt){
 	};
 }
 
-for (@FILES){
+for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: [$_] ... : $!\n";
-	my @data = grep m/./, (defined $in ? <$in> : <STDIN>);
+	my @data = grep m/./, ( defined $in ? <$in> : <STDIN> );
 	chomp @data;
 	
 	my( $rows, $cols );

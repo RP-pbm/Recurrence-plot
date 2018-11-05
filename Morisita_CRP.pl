@@ -8,15 +8,15 @@ my $debug = 0;
 my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @FILES, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $split = " ";
 my $join = " ";
 my $Simpson = 0;
 
-for (@opt){
+for( @opt ){
 	/-simpson/i and do {
 		$Simpson = 1;
 	};
@@ -62,13 +62,13 @@ if( @FILES != 2 ){
 	open my $in0, '<', $FILES[0] or die "$0: can't open $FILES[0]\n";
 	open my $in1, '<', $FILES[1] or die "$0: can't open $FILES[1]\n";
 	my @data;
-	push @data, [ map { chomp; [ split /$split/ ] } 
+	push @data, [ map { chomp; [ split $split ] } 
 		grep m/./, <$_> ] for $in0, $in1;
 		
 	my @cols;
 	my @rows;
 	
-	for my $file (0 .. 1){
+	for my $file ( 0 .. 1 ){
 		( $cols[$file], $rows[$file] ) = 
 			( ~~ @{ $data[$file][0] }, ~~ @{ $data[$file] } );
 		$debug and print "cols: $cols[$file], rows: $rows[$file]\n";
@@ -80,16 +80,16 @@ if( @FILES != 2 ){
 	
 	my $rows = $rows[0];
 	
-	for my $file (0 .. 1){
+	for my $file ( 0 .. 1 ){
 		$debug and print "@{$_}\n" for @{ $data[$file] };
 	}
 	
 	my @Xi;
 	
-	for my $file (0 .. 1){
-		for my $i (1 .. $cols[$file]){
+	for my $file ( 0 .. 1 ){
+		for my $i ( 1 .. $cols[$file] ){
 			my $sum;
-			for my $j (1 .. $rows){
+			for my $j ( 1 .. $rows ){
 				$sum += $data[$file][ $j-1 ][ $i-1 ];
 				$debug and print "  $i $j: $sum";
 			}
@@ -99,10 +99,10 @@ if( @FILES != 2 ){
 
 	my @lambda_i;
 	
-	for my $file (0 .. 1){
-		for my $i (1 .. $cols[$file]){
+	for my $file ( 0 .. 1 ){
+		for my $i ( 1 .. $cols[$file] ){
 			my $sum = 0;
-			for my $j (1 .. $rows){
+			for my $j ( 1 .. $rows ){
 				( $Xi[$file][ $i-1 ] * ( $Xi[$file][ $i-1 ] - $Simpson ) ) or next;
 				$sum += ( $data[$file][ $j-1 ][ $i-1 ] * 
 						( $data[$file][ $j-1 ][ $i-1 ] - $Simpson ) ) /
@@ -117,25 +117,25 @@ if( @FILES != 2 ){
 
 	my @matrix;
 
-	for my $i (1 .. $cols[0]){
+	for my $i ( 1 .. $cols[0] ){
 		my @line;
-		for my $j (1 .. $cols[1]){
-		    my $sum;
-		    for my $r (0 .. $rows - 1){
-		        $sum += $data[0][$r][ $i-1 ] * $data[1][$r][ $j-1 ];
+		for my $j ( 1 .. $cols[1] ){
+			my $sum;
+			for my $r ( 0 .. $rows - 1 ){
+				$sum += $data[0][$r][ $i-1 ] * $data[1][$r][ $j-1 ];
 				$debug and print 
 					"[$i:$data[0][$r][ $i-1 ] * $j:$data[1][$r][ $j-1 ]]\n";
-		    }
-		    push @line, 
+			}
+			push @line, 
 				$Xi[0][ $i-1 ] == 0 || $Xi[1][ $j-1 ] == 0 ?
 					0
 				:
 					2 * $sum / 
-					( ($lambda_i[0][ $i-1 ] + $lambda_i[1][ $j-1 ]) 
+					( ( $lambda_i[0][ $i-1 ] + $lambda_i[1][ $j-1 ] ) 
 						* $Xi[0][ $i-1 ] * $Xi[1][ $j-1 ] );
 		}
 		push @matrix, [ @line ];
 	}
 
-	print map "$_\n", join "$join", @{$_} for @matrix;
+	print map "$_\n", join $join, @{$_} for @matrix;
 

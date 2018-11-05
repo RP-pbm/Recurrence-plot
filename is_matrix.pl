@@ -5,16 +5,16 @@ use strict;
 
 my $debug = 0;
 
-my @ARGV_2;
+my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @ARGV_2, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $split = " ";
 
-for (@opt){
+for( @opt ){
 	/-tsv/ and do {
 		$split = "\t";
 	};
@@ -33,17 +33,15 @@ for (@opt){
 	/-d$/ and $debug = 1;
 }
 
-@ARGV = @ARGV_2;
-
-for (@ARGV){
+for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: [$_] ... : $!\n";
-	my @lengths = map { chomp; 0 + split /$split/ } 
-		grep m/./, (defined $in ? <$in> : <STDIN>);
-    
-    my $rows = @lengths;
-    my $ok = @lengths == grep { $lengths[0] == $_ } @lengths;
-    
-    print $ok ? "Matrix: ${lengths[0]} (columns) x ${rows} (rows)\n"
-        : "Not a matrix\n";
+	my @lengths = map { chomp; 0 + split $split } 
+		grep m/./, ( defined $in ? <$in> : <STDIN> );
+	
+	my $rows = @lengths;
+	my $ok = @lengths == grep { $lengths[0] == $_ } @lengths;
+	
+	print $ok ? "Matrix: ${lengths[0]} (columns) x ${rows} (rows)\n"
+		: "Not a matrix\n";
 }

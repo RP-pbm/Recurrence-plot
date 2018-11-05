@@ -8,15 +8,15 @@ my $debug = 0;
 my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @FILES, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $split = " ";
 my $join = " ";
 my $Simpson = 0;
 
-for (@opt){
+for( @opt ){
 	/-simpson/i and do {
 		$Simpson = 1;
 	};
@@ -53,11 +53,11 @@ for (@opt){
 	/-d$/ and $debug = 1;
 }
 
-for (@FILES){
+for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: can't open $_\n";
-	my @data = map { chomp; [ split /$split/ ] } 
-		grep m/./, (defined $in ? <$in> : <STDIN>);
+	my @data = map { chomp; [ split $split ] } 
+		grep m/./, ( defined $in ? <$in> : <STDIN> );
 	
 	my( $cols, $rows ) = ( ~~ @{ $data[0] }, ~~ @data );
 	
@@ -66,10 +66,10 @@ for (@FILES){
 
 	my @Xi;
 
-	for my $i (1 .. $cols){
+	for my $i ( 1 .. $cols ){
 		my $sum;
-		for my $j (1 .. $rows){
-		    $sum += $data[ $j-1 ][ $i-1 ];
+		for my $j ( 1 .. $rows ){
+			$sum += $data[ $j-1 ][ $i-1 ];
 			$debug and print "  $i $j: $sum";
 		}
 		push @Xi, $sum;
@@ -77,11 +77,11 @@ for (@FILES){
 
 	my @lambda_i;
 
-	for my $i (1 .. $cols){
+	for my $i ( 1 .. $cols ){
 		my $sum = 0;
-		for my $j (1 .. $rows){
+		for my $j ( 1 .. $rows ){
 			( $Xi[ $i-1 ] * ( $Xi[ $i-1 ] - $Simpson ) ) or next;
-		    $sum += ( $data[ $j-1 ][ $i-1 ] * 
+			$sum += ( $data[ $j-1 ][ $i-1 ] * 
 					( $data[ $j-1 ][ $i-1 ] - $Simpson ) ) /
 					( $Xi[ $i-1 ] * ( $Xi[ $i-1 ] - $Simpson ) );
 		}
@@ -93,14 +93,14 @@ for (@FILES){
 
 	my @matrix;
 
-	for my $i (1 .. $cols){
+	for my $i ( 1 .. $cols ){
 		my @line;
-		for my $j (1 .. $cols){
-		    my $sum;
-		    for my $r (@data){
-		        $sum += $r->[ $i-1 ] * $r->[ $j-1 ];
-		    }
-		    push @line, 
+		for my $j ( 1 .. $cols ){
+			my $sum;
+			for my $r ( @data ){
+				$sum += $r->[ $i-1 ] * $r->[ $j-1 ];
+			}
+			push @line, 
 				$Xi[ $i-1 ] == 0 || $Xi[ $j-1 ] == 0 ?
 					0
 				:
@@ -111,7 +111,7 @@ for (@FILES){
 		push @matrix, [ @line ];
 	}
 
-	print map "$_\n", join "$join", @{$_} for @matrix;
+	print map "$_\n", join $join, @{$_} for @matrix;
 
 }
 

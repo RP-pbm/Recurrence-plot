@@ -5,17 +5,17 @@ use warnings;
 
 my $debug = 0;
 
-my @ARGV_2;
+my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @ARGV_2, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $split = " ";
 my $join = " ";
 
-for (@opt){
+for( @opt ){
 	/-F(\S+)/ and do {
 		$split = $1;
 	};
@@ -55,12 +55,10 @@ for (@opt){
 	/-d$/ and $debug = 1;
 }
 
-@ARGV = @ARGV_2;
-
-for (@ARGV){
+for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: [$_] ... : $!\n";
 	print map { $_ . "\n" } map { chomp; join $join, split $split } 
-		(defined $in ? <$in> : <STDIN>);
+		( defined $in ? <$in> : <STDIN> );
 }
 

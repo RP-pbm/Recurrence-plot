@@ -5,11 +5,11 @@ use warnings;
 
 my $debug = 0;
 
-my @ARGV_2;
+my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @ARGV_2, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $split = " ";
@@ -17,7 +17,7 @@ my $join = " ";
 my $cr = 1;
 my $pbm = 0;
 
-for (@opt){
+for( @opt ){
 	/-pbm/ and do {
 		$pbm = 1;
 	};
@@ -42,13 +42,11 @@ for (@opt){
 	/-d$/ and $debug = 1;
 }
 
-@ARGV = @ARGV_2;
-
-for (@ARGV){
+for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: [$_] ... : $!\n";
 	
-	my @data = map { chomp; [ split $split ] } (defined $in ? <$in> : <STDIN>);
+	my @data = map { chomp; [ split $split ] } ( defined $in ? <$in> : <STDIN> );
 	
 	if( $pbm ){
 		print "P1\n";

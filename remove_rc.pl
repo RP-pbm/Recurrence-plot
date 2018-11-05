@@ -5,11 +5,11 @@ use strict;
 
 my $debug = 0;
 
-my @ARGV_2;
+my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @ARGV_2, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $top = 0;
@@ -20,7 +20,7 @@ my $right = 0;
 my $split = " ";
 my $join = " ";
 
-for (@opt){
+for( @opt ){
 	/-top(\d+)/ and do {
 		$top = $1;
 	};
@@ -60,12 +60,10 @@ for (@opt){
 	/-d$/ and $debug = 1;
 }
 
-@ARGV = @ARGV_2;
-
-for (@ARGV){
+for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: [$_] ... : $!\n";
-	my @data = map { chomp; [ split $split ] } grep m/./, (defined $in ? <$in> : <STDIN>);
+	my @data = map { chomp; [ split $split ] } grep m/./, ( defined $in ? <$in> : <STDIN> );
 	splice @data, 0, $top;
 	splice @data, -$bottom if $bottom;
 	splice @{$_}, 0, $left for @data;

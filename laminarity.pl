@@ -5,11 +5,11 @@ use strict;
 
 my $debug = 0;
 
-my @ARGV_2;
+my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-/ ? (push @opt, $_) : (push @ARGV_2, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $minl = 2;
@@ -20,7 +20,7 @@ my $visual = 0;
 my $longest = 0;
 my $trapping_time = 0; # average
 
-for (@opt){
+for( @opt ){
 	/-minl(\d+)/ and do {
 		$minl = $1;
 	};
@@ -40,12 +40,10 @@ for (@opt){
 	/-tt|-avg/ and do {
 		$trapping_time = 1;
 	};
-	/-d/ and $debug = 1;
+	/-d$/ and $debug = 1;
 }
 
-@ARGV = @ARGV_2;
-
-for (@ARGV){
+for( @FILES ){
 	open my $in, '<', $_ or die "$0: [$_] ... : $!\n";
 	my $format = <$in>;
 	$format =~ /P1/ or die "Not P1\n";
@@ -60,13 +58,13 @@ for (@ARGV){
 	my %lenghts;
 	my $sum = 0;
 	my @lines;
-	map { my $len = length(); $sum += $len; $lenghts{ $len } ++ } 
+	map { my $len = length; $sum += $len; $lenghts{ $len } ++ } 
 		@lines = $data =~ /1{$minl,}/g;
 	
 	printf "${printf}\n", $sum / $black;
 	
 	if( $longest ){
-		my $maxl = (sort {$b <=> $a} keys %lenghts)[ 0 ] || 0;
+		my $maxl = ( sort { $b <=> $a } keys %lenghts )[ 0 ] || 0;
 		print "Longest: $maxl\n";
 	}
 	
@@ -75,7 +73,7 @@ for (@ARGV){
 	}
 	
 	if( $hist ){
-		my $maxl = (sort {$b <=> $a} keys %lenghts)[ 0 ] || 0;
+		my $maxl = ( sort { $b <=> $a } keys %lenghts )[ 0 ] || 0;
 		printf "$_ : %s\n", map { $visual ? '*' x $_ : (sprintf "%3d", $_) } 
 			exists $lenghts{ $_ } ? $lenghts{ $_ } : 0 
 			for $minl .. $maxl;

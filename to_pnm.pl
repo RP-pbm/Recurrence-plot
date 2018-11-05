@@ -8,8 +8,8 @@ my $debug = 0;
 my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @FILES, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $split = " ";
@@ -23,7 +23,7 @@ my $treshold = 0;
 my $gt_treshold = 1;
 my $ge_treshold = 0;
 
-for (@opt){
+for( @opt ){
 	/-topbm/ and do {
 		$to_pbm = 1;
 	};
@@ -80,12 +80,12 @@ for (@opt){
 	/-d$/ and $debug = 1;
 }
 
-for (@FILES){
+for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: [$_] ... : $!\n";
-	my @data = map { chomp; [ split $split ] } grep m/./, (defined $in ? <$in> : <STDIN>);
+	my @data = map { chomp; [ split $split ] } grep m/./, ( defined $in ? <$in> : <STDIN> );
 	
-	$findmax and $maxval = (sort {$b <=> $a} map @{$_}, @data)[ 0 ];
+	$findmax and $maxval = ( sort { $b <=> $a } map @{ $_ }, @data )[ 0 ];
 	
 	$treshold *= $maxval;
 	
@@ -100,12 +100,12 @@ for (@FILES){
 	}
 	
 	if( defined $maxproc ){
-		my @sorted = (sort {$b <=> $a} map @{$_}, @data);
+		my @sorted = ( sort { $b <=> $a } map @{ $_ }, @data );
 		$treshold = $sorted[ @sorted * 0.01 * $maxproc ];
 	}
 
-	for (@data){
-		print join "$join",
+	for( @data ){
+		print join $join,
 			map {
 				$to_pbm ?
 					( 
@@ -116,7 +116,7 @@ for (@FILES){
 					)
 				:
 					( 255 - int 255 * $_ / $maxval )
-			} @{$_};
+			} @{ $_ };
 		print "\n";
 	}
 }

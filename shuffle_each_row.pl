@@ -5,17 +5,17 @@ use strict;
 
 my $debug = 0;
 
-my @ARGV_2;
+my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @ARGV_2, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $split = " ";
 my $join = " ";
 
-for (@opt){
+for( @opt ){
 	/-tsv/ and do {
 		$split = "\t";
 	};
@@ -43,18 +43,16 @@ for (@opt){
 	/-d$/ and $debug = 1;
 }
 
-@ARGV = @ARGV_2;
-
-for (@ARGV){
+for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: [$_] ... : $!\n";
-	my @data = map { chomp; [ split /$split/ ] } grep m/./, 
-		(defined $in ? <$in> : <STDIN>);
+	my @data = map { chomp; [ split $split ] } grep m/./, 
+		( defined $in ? <$in> : <STDIN> );
 	
-	for my $row (@data){
+	for my $row ( @data ){
 		
 		@_ = 0 .. @{$row} - 1;
-		for my $i (reverse 1 .. @{$row}){
+		for my $i ( reverse 1 .. @{$row} ){
 			my $x = int rand $i;
 			( $_[ $x ], $_[ $i - 1 ] ) = ( $_[ $i - 1 ], $_[ $x ] );
 			}

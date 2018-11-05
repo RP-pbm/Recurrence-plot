@@ -8,8 +8,8 @@ my $debug = 0;
 my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @FILES, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $split = " ";
@@ -23,7 +23,7 @@ my $is_tb = 0;
 my $print_accumulated = 0;
 my $print_synch_coords = 0;
 
-for (@opt){
+for( @opt ){
 	/-pbm/ and do {
 		$pbm = 1;
 	};
@@ -81,10 +81,10 @@ for (@opt){
 	/-d$/ and $debug = 1;
 }
 
-for (@FILES){
+for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: [$_] ... : $!\n";
-	my @data = grep m/./, (defined $in ? <$in> : <STDIN>);
+	my @data = grep m/./, ( defined $in ? <$in> : <STDIN> );
 	chomp @data;
 	
 	my( $rows, $cols );
@@ -93,10 +93,10 @@ for (@FILES){
 		( $rows, $cols ) = reverse split ' ', shift @data;
 	}
 	else{
-		( $rows, $cols ) = ( 0 + @data, 0 + split /$split/, $data[0] );
+		( $rows, $cols ) = ( 0 + @data, 0 + split $split, $data[0] );
 	}
 
-	@data = map { [ split /$split/ ] } @data;
+	@data = map { [ split $split ] } @data;
 	
 	$debug and print "\@data:\n";
 	$debug and print "@{$_}\n" for @data;

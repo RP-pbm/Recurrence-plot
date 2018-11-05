@@ -5,11 +5,11 @@ use strict;
 
 my $debug = 0;
 
-my @ARGV_2;
+my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @ARGV_2, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $split = " ";
@@ -19,7 +19,7 @@ my $to_pbm = 0;
 my $to_pgm = 0;
 my $till_end = 1;
 
-for (@opt){
+for( @opt ){
 	/-pbm/ and do {
 		$pbm = 1;
 	};
@@ -65,12 +65,10 @@ for (@opt){
 	/-d$/ and $debug = 1;
 }
 
-@ARGV = @ARGV_2;
-
-for (@ARGV){
+for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: [$_] ... : $!\n";
-	my @data = grep m/./, (defined $in ? <$in> : <STDIN>);
+	my @data = grep m/./, ( defined $in ? <$in> : <STDIN> );
 	chomp @data;
 	
 	my( $rows, $cols );
@@ -79,10 +77,10 @@ for (@ARGV){
 		( $rows, $cols ) = reverse split ' ', shift @data;
 	}
 	else{
-		( $rows, $cols ) = (0 + @data, 0 + split /$split/, $data[0] );
+		( $rows, $cols ) = ( 0 + @data, 0 + split /$split/, $data[0] );
 	}
 
-	@data = map { [ split /$split/ ] } @data;
+	@data = map { [ split $split ] } @data;
 	
 	if( $to_pgm ){
 		print "P2\n";
@@ -113,7 +111,7 @@ for (@ARGV){
 	$debug and print "$x < $rows and $y < $cols | dist: $dist\n";
 	my $found = 0;	
 	
-		for my $step (0 .. $dist){
+		for my $step ( 0 .. $dist ){
 			my $frow = $data[ $x - $step ][ $y - 0 ];
 			my $fcol = $data[ $x - 0 ][ $y - $step ];
 			next if not $frow || $fcol;
@@ -138,8 +136,8 @@ for (@ARGV){
 				$step = 0;
 			}
 		
-			for my $i ($x - $dist .. $nx - 1){
-				for my $j ($y - $dist .. $ny - 1){
+			for my $i ( $x - $dist .. $nx - 1 ){
+				for my $j ( $y - $dist .. $ny - 1 ){
 				#%	print "$data[$i][$j] == 0 and $data[$i][$j] = 2;\n";
 					$data[$i][$j] == 0 and $data[$i][$j] = $grey;
 					$data[$i][$j] == 1 and $data[$i][$j] = $grey_on_dot;
@@ -175,7 +173,7 @@ for (@ARGV){
 			$grey_on_dot, 80,
 			$corner, 0,
 		);
-		for (@data){
+		for( @data ){
 			map { $_ = $convert{ $_ } } @{$_};
 		}
 	}

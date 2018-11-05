@@ -5,11 +5,11 @@ use strict;
 
 my $debug = 0;
 
-my @ARGV_2;
+my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @ARGV_2, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $tests_DIR = 'tests';
@@ -22,7 +22,7 @@ my $make_diffs = 0;
 my $remove_diffs = 0;
 my $all = 0;
 
-for (@opt){
+for( @opt ){
 	/-all/ and do {
 		$all = 1;
 	};
@@ -45,13 +45,11 @@ for (@opt){
 	/-d$/ and $debug = 1;
 }
 
-@ARGV = @ARGV_2;
-
-if( not @ARGV or $all ){
-	@ARGV = map s/\s//gr, grep /^\S+\.pl$/, `ls`;
+if( not @FILES or $all ){
+	@FILES = map s/\s//gr, grep /^\S+\.pl$/, `ls`;
 	}
 
-for (@ARGV){
+for( @FILES ){
 	print "Testing '$_':\n";
 	open my $script, '<', $_ or die "$0: Can't open script.\n";
 	

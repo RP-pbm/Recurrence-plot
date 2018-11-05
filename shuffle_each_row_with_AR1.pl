@@ -5,11 +5,11 @@ use strict;
 
 my $debug = 0;
 
-my @ARGV_2;
+my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-\S/ ? (push @opt, $_) : (push @ARGV_2, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $split = " ";
@@ -17,7 +17,7 @@ my $join = " ";
 my $autocorr = 1;
 my $lag = 1;
 
-for (@opt){
+for( @opt ){
 	/-noautocorr/ and do {
 		$autocorr = 0;
 	};
@@ -51,17 +51,15 @@ for (@opt){
 	/-d$/ and $debug = 1;
 }
 
-@ARGV = @ARGV_2;
-
-for (@ARGV){
+for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: [$_] ... : $!\n";
-	my @data = map { chomp; [ split /$split/ ] } grep m/./, (defined $in ? <$in> : <STDIN>);
+	my @data = map { chomp; [ split $split ] } grep m/./, ( defined $in ? <$in> : <STDIN> );
 	
 	if( $lag != 1 ){ die "Not implemented for lag != 1.\n" }
 	if( $autocorr != 1 ){ die "Not implemented without autocorrelation.\n" }
 	
-	for my $row (@data){
+	for my $row ( @data ){
 		my $avg = ( eval join ' + ', @{$row} ) / @{$row};
 		
 		my $avg_1 = ( eval join ' + ', @{$row}[0 .. @{$row} - 2] ) / ( @{$row} - 1 );
@@ -70,14 +68,14 @@ for (@ARGV){
 		
 		my $sum_12 = 0;
 		
-		for my $i (0 .. @{$row} - 2){
+		for my $i ( 0 .. @{$row} - 2 ){
 			$sum_12 += ( $row->[$i] - $avg_1 ) * ( $row->[$i + 1] - $avg_2 );
 			}
 		
 		my $sum_1 = 0;
 		my $sum_2 = 0;
 		
-		for my $i (0 .. @{$row} - 2){
+		for my $i ( 0 .. @{$row} - 2 ){
 			$sum_1 += ( $row->[$i] - $avg_1 ) ** 2;
 			$sum_2 += ( $row->[$i + 1] - $avg_2 ) ** 2;
 			}
@@ -92,7 +90,7 @@ for (@ARGV){
 		$debug and print "rho: $rho\n";
 		
 		@_ = 0 .. @{$row} - 1;
-		for my $i (reverse 1 .. @{$row}){
+		for my $i ( reverse 1 .. @{$row} ){
 			my $x = int rand $i;
 			( $_[ $x ], $_[ $i - 1 ] ) = ( $_[ $i - 1 ], $_[ $x ] );
 			}
@@ -111,7 +109,7 @@ for (@ARGV){
 		
 		my @Y = ( $row->[0] );
 		
-		for my $i (1 .. @{$row} - 1){
+		for my $i ( 1 .. @{$row} - 1 ){
 			push @Y, $rho * $Y[-1] + $row->[ $i ];
 			}
 		

@@ -5,29 +5,27 @@ use strict;
 
 my $debug = 0;
 
-my @ARGV_2;
+my @FILES;
 my @opt;
 
-for (@ARGV){
-	/^-/ ? (push @opt, $_) : (push @ARGV_2, $_);
+for( @ARGV ){
+	/^-\S/ ? ( push @opt, $_ ) : ( push @FILES, $_ );
 }
 
 my $dots = 0;
 my $printf = '%f';
 
-for (@opt){
+for( @opt ){
 	/-x/ and do {
 		$dots = 1;
 	};
 	/-f(\S+)/ and do {
 		$printf = "%$1";
 	};
-	/-d/ and $debug = 1;
+	/-d$/ and $debug = 1;
 }
 
-@ARGV = @ARGV_2;
-
-for (@ARGV){
+for( @FILES ){
 	open my $in, '<', $_ or die "$0: [$_] ... : $!\n";
 	my $format = <$in>;
 	$format =~ /P1/ or die "Not P1\n";
