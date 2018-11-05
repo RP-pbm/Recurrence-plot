@@ -1,0 +1,1 @@
+../inputs/black-2x2.ssv
