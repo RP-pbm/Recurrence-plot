@@ -18,11 +18,11 @@ my $pbm = 0;
 my $pgm = 0;
 my $to_pbm = 0;
 my $to_pgm = 0;
-my $max_val = 1;
+my $max_val;
 
 for( @opt ){
-	/-max(val)?/ and do {
-		$max_val = 1;
+	/-max(?:val)?(\d+)/ and do {
+		$max_val = $1;
 	};
 	/-pbm/ and do {
 		$pbm = 1;
@@ -74,8 +74,8 @@ for( @FILES ){
 	my @data = grep m/./, ( defined $in ? <$in> : <STDIN> );
 	chomp @data;
 	
-	if( $to_pgm and $pbm or $to_pbm and $pgm ){
-		warn "warning: Attempt to convert between formats.\n";
+	if( $to_pbm and $pgm or $to_pgm and $pbm ){
+		die "error: Attempt to convert between formats!\n";
 		}
 	
 	my( $rows, $cols );
@@ -93,6 +93,10 @@ for( @FILES ){
 	
 	if( $to_pbm || $to_pgm and ! $pbm and ! $pgm ){
 		( $rows, $cols ) = ( ~~ @data, ~~ split $split, $data[0] );
+		}
+	
+	if( not defined $max_val ){
+		$max_val = ( sort { $b <=> $a } map { split $split } @data )[ 0 ];
 		}
 	
 	if( $to_pbm ){
