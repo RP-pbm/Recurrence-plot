@@ -1,0 +1,1 @@
+../inputs/square-4x4.ssv
