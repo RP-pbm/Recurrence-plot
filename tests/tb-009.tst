@@ -1,0 +1,1 @@
+../inputs/colors-01-4x3.ppm

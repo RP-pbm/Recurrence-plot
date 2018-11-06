@@ -1,0 +1,1 @@
+../inputs/cr-4x3.pbm
