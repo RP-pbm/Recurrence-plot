@@ -16,8 +16,22 @@ my $split = " ";
 my $join = " ";
 my $pbm = 0;
 my $topbm = 0;
+my $intersection = 1;  # a.k.a. multiplication
+my $union = 0;
+my $difference = 0;
 
 for( @opt ){
+	/-mult\w*|-intersection/ and do {
+		$intersection = 1;
+	};
+	/-union/ and do {
+		$union = 1;
+		$intersection = 0;
+	};
+	/-diff\w*/ and do {
+		$difference = 1;
+		$intersection = 0;
+	};
 	/-pbm/ and do {
 		$pbm = 1;
 	};
@@ -58,13 +72,13 @@ for( @opt ){
 }
 
 if( @FILES != 2 ){
-	die "\@ARGV != 2; There must be two data files to compare.\n";
+	die "\@FILES != 2; There must be two data files to compare.\n";
 	}
 	
-	$debug and print "<<@ARGV>>\n";
+	$debug and print "<<@FILES>>\n";
 	
-	open my $in0, '<', $ARGV[0] or die "$0: Can't open '$ARGV[0]' : $!\n";
-	open my $in1, '<', $ARGV[1] or die "$0: Can't open '$ARGV[1]' : $!\n";
+	open my $in0, '<', $FILES[0] or die "$0: Can't open '$FILES[0]' : $!\n";
+	open my $in1, '<', $FILES[1] or die "$0: Can't open '$FILES[1]' : $!\n";
 	my @data;
 	push @data, [ map { chomp; $_ } grep m/./, <$_> ] for $in0, $in1;
 	
@@ -82,7 +96,7 @@ if( @FILES != 2 ){
 	for my $u ( 0 .. 1 ){
 		@{ $data[$u] } = map { [ split $split ] } @{ $data[$u] };
 		$debug and print "@{$_}\n" for @{ $data[$u] };
-	}
+		}
 	
 	for my $u ( 0 .. 1 ){
 		( $cols[$u], $rows[$u] ) = ( ~~ @{ $data[$u][0] }, ~~ @{ $data[$u] } );
@@ -90,24 +104,48 @@ if( @FILES != 2 ){
 		}
 		
 	if( $rows[0] != $rows[1] ){
-		die "Number of rows (dimensions) must be equal!\n";
+		die "Number of rows must be equal!\n";
 		}
 	
 	if( $cols[0] != $cols[1] ){
-		die "Number of cols (dimensions) must be equal!\n";
+		die "Number of columns must be equal!\n";
 		}
-		
-	for my $i ( 1 .. $rows[0] ){
-		for my $j ( 1 .. $cols[0] ){
-			$data[2][ $i-1 ][ $j-1 ] = 
-			$data[0][ $i-1 ][ $j-1 ] * 
-			$data[1][ $i-1 ][ $j-1 ];
+	
+	if( $intersection ){
+		for my $i ( 1 .. $rows[0] ){
+			for my $j ( 1 .. $cols[0] ){
+				$data[2][ $i-1 ][ $j-1 ] = 
+				$data[0][ $i-1 ][ $j-1 ] * 
+				$data[1][ $i-1 ][ $j-1 ];
+				}
+			}
 		}
-	}
-
+	
+	if( $union ){
+		for my $i ( 1 .. $rows[0] ){
+			for my $j ( 1 .. $cols[0] ){
+				$data[2][ $i-1 ][ $j-1 ] = 
+				$data[0][ $i-1 ][ $j-1 ] | 
+				$data[1][ $i-1 ][ $j-1 ];
+				}
+			}
+		}
+	
+	if( $difference ){
+		for my $i ( 1 .. $rows[0] ){
+			for my $j ( 1 .. $cols[0] ){
+				$data[2][ $i-1 ][ $j-1 ] = 
+				$data[0][ $i-1 ][ $j-1 ] - 
+				$data[1][ $i-1 ][ $j-1 ];
+				$data[2][ $i-1 ][ $j-1 ] =~ s/^-\d+$/0/;
+				}
+			}
+		}
+	
 	if( $topbm ){
 		print "P1\n";
 		print "$cols[0] $rows[0]\n";
 		}
+	
 	print map "$_\n", join $join, @{$_} for @{ $data[2] };
 
