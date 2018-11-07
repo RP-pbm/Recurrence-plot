@@ -199,7 +199,7 @@ for( @FILES ){
 	printf "${printf}\n", $determinism;
 	
 	if( $longest ){
-		my $max_length = ( sort { $b <=> $a } keys %lengths )[ 0 ] || 0;
+		my $max_length = ( sort { $b <=> $a } keys %lengths )[ 0 ] || -1;
 		print "Longest: $max_length\n";
 	}
 	
