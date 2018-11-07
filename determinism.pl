@@ -20,7 +20,7 @@ my $rr = 0;
 my $pbm = 0;
 my $to_pbm = 0;
 my $to_pgm = 0;
-my $hist = 0;
+my $histogram = 0;
 my $visual = 0;
 my $longest = 0;
 my $avg = 0; # average
@@ -37,17 +37,17 @@ for( @opt ){
 	/-topgm/ and do {
 		$to_pgm = 1;
 	};
-	/-rr/ and do {	# only to show recurrence rate
+	/-rr/ and do {	# only to print recurrence rate
 		$rr = 1;
 	};
-	/-minl.*(\d+)/ and do {
+	/-minl.*?(\d+)/ and do {
 		$min_length = $1;
 	};
 	/-f(\S+)/ and do {
 		$printf = "%$1";
 	};
 	/-hist(v)?/ and do {
-		$hist = 1;
+		$histogram = 1;
 		defined $1 and $visual = 1;
 	};
 	/-longest/ and do {
@@ -102,6 +102,7 @@ for( @FILES ){
 	chomp @data;
 	
 	my( $rows, $cols );
+	
 	if( $pbm ){
 		shift @data;
 		( $rows, $cols ) = reverse split ' ', shift @data;
@@ -114,6 +115,7 @@ for( @FILES ){
 	
 	@data = map { [ split $split ] } @data;
 	
+	$debug and print "----------\n";
 	$debug and print "@{$_}\n" for @data;
 	$debug and print "---\n";
 	
@@ -123,8 +125,8 @@ for( @FILES ){
 	
 	$rr and do { printf "${printf}\n", $cnt_1 / $size ; next };
 	
-	# ***** skew and rotate-cw begin *****
-	my $skewed = $data =~ s/\n/ '*' x $cols /ger;
+	# ***** begin: skew and rotate-cw *****
+	my $skewed = $data =~ s/\n/ '*' x $rows /ger;
 	my $wide = $rows + $cols - 1;
 	if( $debug ){
 		print "Wide: $wide\n";
@@ -138,7 +140,7 @@ for( @FILES ){
 	}
 	$debug and print "i: $i\n";
 	$debug and print "$_\n" for @rotcw;
-	# ***** skew and rotate-cw end *****
+	# ***** end: skew and rotate-cw *****
 
 	$data = join "\n", @rotcw;
 	
@@ -189,11 +191,11 @@ for( @FILES ){
 	
 	my %lengths;
 	my $sum = 0;
-	my @lines;
+	my @lines = $data =~ /1{$min_length,}/g;
 	map { my $len = length; $sum += $len; $lengths{ $len } ++ } 
-		@lines = $data =~ /1{$min_length,}/g;
+		@lines;
 	
-	my $determinism = $sum / $cnt_1;
+	my $determinism = $cnt_1 ? $sum / $cnt_1 : -1;
 	printf "${printf}\n", $determinism;
 	
 	if( $longest ){
@@ -202,19 +204,20 @@ for( @FILES ){
 	}
 	
 	if( $avg ){
-		printf "Average length: ${printf}\n", $sum / @lines;
+		printf "Average length: ${printf}\n", @lines ? $sum / @lines : -1;
 	}
 
 	if( $ratio ){
-		printf "Ratio: ${printf}\n", $determinism * $size / $cnt_1;
+		printf "Ratio: ${printf}\n", $cnt_1 ? $determinism * $size / $cnt_1 : -1;
 	}
+	
 	if( $entropy ){
-		printf "Entrophy: ${printf}\n",  0 - eval join ' + ', 
+		printf "Entrophy: ${printf}\n", !keys %lengths ? -1 : 0 - eval join ' + ', 
 			map { $lengths{ $_ } * log $lengths{ $_ } } keys %lengths;
 	}
 	
-	if( $hist ){
-		my $max_length = ( sort {$b <=> $a} keys %lengths )[ 0 ] || 0;
+	if( $histogram ){
+		my $max_length = ( sort { $b <=> $a } keys %lengths )[ 0 ] || 0;
 		printf "%3d : %s\n", $_, map { $visual ? '*' x $_ : ( sprintf "%3d", $_ ) } 
 			exists $lengths{ $_ } ? $lengths{ $_ } : 0 
 			for $min_length .. $max_length;
