@@ -1,1 +1,1 @@
-../inputs/pops-8x1-51111111.ssv
+../inputs/pops-3x3-111-111-011.ssv

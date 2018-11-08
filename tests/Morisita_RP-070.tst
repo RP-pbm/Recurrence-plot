@@ -1,1 +1,0 @@
-../inputs/pops-21x2-sine-02.ssv

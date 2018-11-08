@@ -1,1 +1,1 @@
-../inputs/pops-1x2-12.ssv
+../inputs/pops-4x2-0101-1010.ssv

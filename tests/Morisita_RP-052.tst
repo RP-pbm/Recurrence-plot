@@ -1,1 +1,0 @@
-../inputs/cosine-01.ssv

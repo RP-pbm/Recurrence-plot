@@ -1,1 +1,0 @@
-../inputs/exponential-02.ssv

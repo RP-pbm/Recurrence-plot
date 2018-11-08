@@ -1,1 +1,1 @@
-../inputs/pops-8x1-87654321.ssv
+../inputs/pops-10x2-rand-02.ssv

@@ -1,1 +1,0 @@
-../inputs/pops-11x2-sqrt-01.ssv

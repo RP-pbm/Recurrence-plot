@@ -1,1 +1,0 @@
-../inputs/rand-10x1-02.ssv
