@@ -54,7 +54,7 @@ for( @opt ){
 }
 
 if( @FILES != 2 ){
-	die "\@ARGV != 2; There must be two data files to compare.\n";
+	die "\@FILES != 2; There must be two data files to compare.\n";
 	}
 	
 	$debug and print "\@FILES: @FILES\n";
