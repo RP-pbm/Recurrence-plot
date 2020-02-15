@@ -13,12 +13,19 @@ for( @ARGV ){
 }
 
 my $dots = 0;
+my $array = 0;
 my $printf = '%f';
 my $pbm = 0;
+
+my $split = " ";
+my $join = " ";
 
 for( @opt ){
 	/-x$|-n$|-dots/ and do {
 		$dots = 1;
+	};
+	/-j$|-h$|-array/ and do {
+		$array = 1;
 	};
 	/-f(\S+)/ and do {
 		$printf = "%$1";
@@ -26,14 +33,43 @@ for( @opt ){
 	/-pbm/ and do {
 		$pbm = 1;
 	};
+	/-tsv/ and do {
+		$split = "\t";
+	};
+	/-csv/ and do {
+		$split = ',';
+	};
+	/-cssv/ and do {
+		$split = ', ';
+	};
+	/-ssv/ and do {
+		$split = ' ';
+	};
+	/-nosep/ and do {
+		$split = '';
+	};
+	/-totsv/ and do {
+		$join = "\t";
+	};
+	/-tocsv/ and do {
+		$join = ',';
+	};
+	/-tocssv/ and do {
+		$join = ', ';
+	};
+	/-tossv/ and do {
+		$join = ' ';
+	};
+	/-tonosep/ and do {
+		$join = '';
+	};
 	/-d$/ and $debug = 1;
 }
 
 for( @FILES ){
 	my $in;
 	/^-$/ or open $in, '<', $_ or die "$0: [$_] ... : $!\n";
-	my @data = grep m/./, ( defined $in ? <$in> : <STDIN> );
-	chomp @data;
+	my @data = map { chomp; $_ } grep m/./, ( defined $in ? <$in> : <STDIN> );
 	
 	my( $rows, $cols );
 	
@@ -42,12 +78,26 @@ for( @FILES ){
 		( $rows, $cols ) = reverse split ' ', shift @data;
 		}
 	
-	my @whites_blacks = ( 0, 0 );
+	@data = map { [ split $split, $_, -1 ] } @data;
 	
-	/ (0|1) (?{ $whites_blacks[ $1 ] ++ }) (*FAIL) /x for @data;
+	if( ! $pbm ){
+		$rows = @data;
+		$cols = @{ $data[ 0 ] };
+		}
 	
-	my $all_dots = $whites_blacks[0] + $whites_blacks[1];
+	my @blacks;
+	
+	for( @data ){
+		my $blacks = grep $_ == 1, @{ $_ };
+		
+		push @blacks, $blacks;
+		}
+	
+	if( ! $array ){
+		@blacks = eval join '+', @blacks;
+		}
 	
 	$dots and $printf = "%d";
-	printf "${printf}\n", $whites_blacks[1] / ( $dots ? 1 : $all_dots );
+	print map "$_\n", join $join, 
+		map { sprintf "${printf}", $_ / ( $dots ? 1 : $rows * $cols ) } @blacks;
 }
