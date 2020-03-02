@@ -16,6 +16,7 @@ my $split = " ";
 my $join = " ";
 my $autocorr = 1;
 my $lag = 1;
+my $normalize = 1;
 
 for( @opt ){
 	/-noautocorr/ and do {
@@ -23,6 +24,9 @@ for( @opt ){
 	};
 	/-lag(\d+)/ and do {
 		$lag = $1;
+	};
+	/-no-normalize/ and do {
+		$normalize = 0;
 	};
 	/-tsv/ and do {
 		$split = "\t";
@@ -101,7 +105,11 @@ for( @FILES ){
 		
 		$debug and print "shuffled: [@{$row}]\n";
 		
-		map { $_ -= $avg } @{$row};
+		if( $normalize ){
+			map { $_ -= $avg } @{$row};
+			}
+		
+		$debug and printf "min & max: %s & %s\n", ( sort { $a <=> $b } @{$row} )[ 0, -1 ];
 		
 	#!	$debug and print "minus-avg: [@{$row}]\n";
 		$debug and printf "minus-avg: [%s]\n", join ' ', 
