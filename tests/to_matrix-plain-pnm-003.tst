@@ -1,0 +1,1 @@
+../inputs/wider-01.ppm
