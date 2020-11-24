@@ -19,8 +19,8 @@ my $CRP = 0;
 my $diff = 1;
 my $ratio = 0;
 my $norm = 1;
-my $row_number_to_compare = 1;
-my $diff_unvalue_zeroes = 1;
+my $row_number_to_compare = 0;
+my $diff_unvalue_zeroes = 0;
 my $Morisita_Horn = 0;
 my $Simpson = 0;
 my $embedding = 1;
@@ -52,6 +52,9 @@ for( @opt ){
 	};
 	/-row-number(?:-to-compare)?(\d+)/ and do {
 		$row_number_to_compare = $1;
+	};
+	/-diff-unvalue-zeroes/ and do {
+		$diff_unvalue_zeroes = 1;
 	};
 	/-M(?:orisita)?-?H(?:orn)?/i and do {
 		$Morisita_Horn = 1;
@@ -197,24 +200,36 @@ while( @FILES ){
 						)
 					}
 				elsif( $diff ){
-					my $diff_ij;
-					$diff_ij = abs( 
-						$data[ 0 ][ $row_number_to_compare - 1 ][ $i - 1 ] - 
-						$data[ 1 ][ $row_number_to_compare - 1 ][ $j - 1 ]
-						);
-					if( $diff_unvalue_zeroes ){
-						if( 0 == $data[ 0 ][ $row_number_to_compare - 1 ][ $i - 1 ] && 
-							0 == $data[ 1 ][ $row_number_to_compare - 1 ][ $j - 1 ]
-							){
-							$diff_ij = 1e6;
-							}
-						elsif( 0 == $data[ 0 ][ $row_number_to_compare - 1 ][ $i - 1 ] ){
-							$diff_ij = 1e5;
-							}
-						elsif( 0 == $data[ 1 ][ $row_number_to_compare - 1 ][ $j - 1 ] ){
-							$diff_ij = 1e5;
-							}
+					my $diff_ij = 0;
+					
+					my @row_numbers_to_compare = 1 .. @{ $data[ 0 ] };
+					
+					if( $row_number_to_compare ){
+						@row_numbers_to_compare = $row_number_to_compare;
 						}
+					
+					for my $row_number ( @row_numbers_to_compare ){
+						my $diff_row_ij = abs( 
+							$data[ 0 ][ $row_number - 1 ][ $i - 1 ] - 
+							$data[ 1 ][ $row_number - 1 ][ $j - 1 ]
+							);
+						if( $diff_unvalue_zeroes ){
+							if( 0 == $data[ 0 ][ $row_number - 1 ][ $i - 1 ] && 
+								0 == $data[ 1 ][ $row_number - 1 ][ $j - 1 ]
+								){
+								$diff_row_ij = 1e6;
+								}
+							elsif( 0 == $data[ 0 ][ $row_number - 1 ][ $i - 1 ] ){
+								$diff_row_ij = 1e5;
+								}
+							elsif( 0 == $data[ 1 ][ $row_number - 1 ][ $j - 1 ] ){
+								$diff_row_ij = 1e5;
+								}
+							}
+						
+						$diff_ij += $diff_row_ij;
+						}
+					
 					$diff_ij;
 					}
 				elsif( $ratio ){
