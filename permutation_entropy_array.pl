@@ -136,7 +136,7 @@ for( @FILES ){
 		
 		for my $pi ( sort keys %hash_of_permutations ){
 			my $value = $nxlogn{ $hash_of_permutations{ $pi } };
-			$debug and print "value:$value\n";
+			$debug and print "value:$pi:[$value]\n";
 			
 			$sum += $value;
 			}
