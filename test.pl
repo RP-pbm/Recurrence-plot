@@ -71,8 +71,8 @@ for( @FILES ){
 			close $opt_fh;
 			}
 		
-		print "<./${_} ${opt} ${tests_DIR}/${script_name}-${test}.tst>\n";
-		my $output = `./${_} ${opt} ${tests_DIR}/${script_name}-${test}.tst`;
+		print "<./${_} ${opt} ${tests_DIR}/${script_name}-${test}.tst 2>&1>\n";
+		my $output = `./${_} ${opt} ${tests_DIR}/${script_name}-${test}.tst 2>&1`;
 		$debug and print $output;
 		
 		if( $make_outputs ){
