@@ -56,7 +56,7 @@ for( @FILES ){
 	my $script_name = s/\.pl$//r;
 	
 	my @tests = grep length, 
-		map { /${script_name}-(\d{3})\.tst$/ ? $1 : '' } `ls ${tests_DIR}/`;
+		map { /^${script_name}-(\d{3})\.tst$/ ? $1 : '' } `ls ${tests_DIR}/`;
 	
 	for my $test ( @tests ){
 		$debug and print $test . "\n";
