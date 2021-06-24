@@ -235,6 +235,8 @@ sub generate_pattern {
 	
 	my $fail = 0;
 	
+	my $eps = 0.00001;
+	
 	$A =~ /
 		( $num )[ ]
 		(?=
@@ -243,7 +245,8 @@ sub generate_pattern {
 		(?{
 			$new .= $XO[ $i ];
 			my $diff = $2 * $expand - $1 * $expand;
-			$fail ||= $diff > int $diff;
+			$diff += $eps;
+			$fail ||= $diff - int $diff > $eps * 2;
 			$debug and print "[$1],[$2],diff:[$diff]\n";
 			$new .= '-' x ( $diff - 1 );
 			$i = 1 - $i;
