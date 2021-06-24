@@ -14,6 +14,7 @@ for( @ARGV ){
 
 my $dots = 0;
 my $array = 0;
+my $smooth = 1;
 my $printf = '%f';
 my $pbm = 0;
 
@@ -26,6 +27,9 @@ for( @opt ){
 	};
 	/-j$|-h$|-array/ and do {
 		$array = 1;
+	};
+	/-smooth(\S+)/ and do {
+		$smooth = $1;
 	};
 	/-f(\S+)/ and do {
 		$printf = "%$1";
@@ -87,17 +91,42 @@ for( @FILES ){
 	
 	my @blacks;
 	
-	for( @data ){
-		my $blacks = grep $_ == 1, @{ $_ };
+	for my $i ( 0 .. @data - 1 ){
+		my $blacks = grep $_ == 1, @{ $data[ $i ] };
 		
 		push @blacks, $blacks;
+		}
+	
+	if( $smooth > 1 ){
+		for my $i ( 0 .. @blacks - $smooth ){
+			my $blacks = 0;
+			
+			for my $j ( $i .. $i + $smooth - 1 ){
+				$blacks += $blacks[ $j ];
+				}
+			$blacks[ $i ] = $blacks / $smooth;
+			}
+		pop @blacks for 1 .. $smooth - 1;
 		}
 	
 	if( ! $array ){
 		@blacks = eval join '+', @blacks;
 		}
 	
-	$dots and $printf = "%d";
+	if( $dots ){
+		$printf = "%d";
+		}
+	
 	print map "$_\n", join $join, 
-		map { sprintf "${printf}", $_ / ( $dots ? 1 : $rows * $cols ) } @blacks;
+		map { sprintf "${printf}", $_ } do {
+			if( $dots ){
+				@blacks;
+				}
+			elsif( $array ){
+				map { $_ / $cols } @blacks;
+				}
+			else{
+				map { $_ / $cols / $rows } @blacks;
+				}
+			};
 }
