@@ -1,0 +1,1 @@
+../inputs/integer_array-01.ssv
