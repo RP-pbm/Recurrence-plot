@@ -17,6 +17,7 @@ my $join = " ";
 my $min_length = 2;
 my $printf = '%f';
 my $rr = 0;
+my $array = 0;
 my $pbm = 0;
 my $to_pbm = 0;
 my $to_pgm = 0;
@@ -39,6 +40,9 @@ for( @opt ){
 	};
 	/-rr/ and do {	# only to print recurrence rate
 		$rr = 1;
+	};
+	/-array/ and do {
+		$array = 1;
 	};
 	/-minl.*?(\d+)/ and do {
 		$min_length = $1;
@@ -156,12 +160,32 @@ for( @FILES ){
 	
 	my %lengths;
 	my $sum = 0;
-	my @lines = map { /1{$min_length,}/g } @data;
-	map { my $len = length; $sum += $len; $lengths{ $len } ++ } 
-		@lines;
+	my @laminarity;
+	my @lines;
+	
+	for( @data ){
+		my $rr = () = /1/g;
+		my @line_lines = map { /1{$min_length,}/g } $_;
+		push @lines, @line_lines;
+		my $line_sum = 0;
+		map { my $len = length;
+			$line_sum += $len;
+			$sum += $len; 
+			$lengths{ $len } ++;
+			} @line_lines;
+		
+		push @laminarity, $rr ? $line_sum / $rr : 0;
+		}
 	
 	my $laminarity = $cnt_1 ? $sum / $cnt_1 : -1;
-	printf "${printf}\n", $laminarity;
+	
+	if( $array ){
+		print join $join, map { sprintf "${printf}", $_ } @laminarity;
+		print "\n";
+		}
+	else{
+		printf "${printf}\n", $laminarity;
+		}
 	
 	if( $longest ){
 		my $max_length = ( sort { $b <=> $a } keys %lengths )[ 0 ] || -1;
