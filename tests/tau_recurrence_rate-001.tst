@@ -1,0 +1,1 @@
+../inputs/mini-18.pbm
