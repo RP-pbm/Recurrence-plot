@@ -116,8 +116,8 @@ while( @FILES ){
 				$RY += $data[ 1 ][ $i ][ $j ];
 				}
 			
-			$MCR_YofX += $JR / $RX;
-			$MCR_XofY += $JR / $RY;
+			$RX > 0 and $MCR_YofX += $JR / $RX;
+			$RY > 0 and $MCR_XofY += $JR / $RY;
 			}
 		
 		$_ /= $rows[ 0 ] for $MCR_YofX, $MCR_XofY;
@@ -150,8 +150,8 @@ while( @FILES ){
 					$RY += $data[ 1 ][ $i ][ $j ];
 					}
 				
-				$MCR_YofX += $JR / $RX;
-				$MCR_XofY += $JR / $RY;
+				$RX > 0 and $MCR_YofX += $JR / $RX;
+				$RY > 0 and $MCR_XofY += $JR / $RY;
 				}
 			
 			$_ /= $rows[ 0 ] for $MCR_YofX, $MCR_XofY;
