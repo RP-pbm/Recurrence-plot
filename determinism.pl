@@ -14,6 +14,7 @@ for( @ARGV ){
 
 my $split = " ";
 my $join = " ";
+my $array = 0;
 my $min_length = 2;
 my $printf = '%f';
 my $rr = 0;
@@ -28,6 +29,9 @@ my $ratio = 0;
 my $entropy = 0;
 
 for( @opt ){
+	/-array(\d+)/ and do {
+		$array = $1;
+	};
 	/-pbm/ and do {
 		$pbm = 1;
 	};
@@ -124,6 +128,57 @@ for( @FILES ){
 	my $cnt_1 = () = $data =~ /1/g;
 	
 	$rr and do { printf "${printf}\n", $cnt_1 / $size ; next };
+	
+	if( $array ){
+		my @array;
+		
+		for my $i ( 0 .. $cols - 1 - $array + 1 ){
+			my @lines;
+			
+			my $rr = 0;
+			
+			for my $row ( 0 .. $rows - 1 ){
+				for my $col ( $i .. $i + $array - 1 ){
+					$rr += $data[ $row ][ $col ];
+					}
+				}
+			
+			$debug and print "rr:[$rr]\n";
+			
+			for my $row ( 0 .. $rows - 1 ){
+				my $ii = $row;
+				my $jj = 0;
+				my $str = '';
+				while( $ii < $rows and $jj < $array ){
+					$str .= $data[ $ii ][ $i + $jj ];
+					$ii ++; $jj ++;
+					}
+				push @lines, $str =~ m/1{$min_length,}/g;
+				}
+			
+			for my $col ( 1 .. $cols - 1 ){
+				my $ii = 0;
+				my $jj = $col;
+				my $str = '';
+				while( $ii < $rows and $jj < $array ){
+					$str .= $data[ $ii ][ $i + $jj ];
+					$ii ++; $jj ++;
+					}
+				push @lines, $str =~ m/1{$min_length,}/g;
+				}
+			
+			my $sum = 0;
+			map { my $len = length; $sum += $len; } 
+				@lines;
+			
+			$debug and print "sum:[$sum]\n";
+			
+			push @array, $sum / $rr;
+			}
+		
+		print map "$_\n", join $join, @array;
+		next;
+		}
 	
 	# ***** begin: skew and rotate-cw *****
 	my $skewed = $data =~ s/\n/ '*' x $rows /ger;
