@@ -23,6 +23,8 @@ my $row_number_to_compare = 0;
 my $diff_unvalue_zeroes = 0;
 my $Morisita_Horn = 0;
 my $Simpson = 0;
+my $my_overlap = 0;
+my $Jaccard = 0;
 my $embedding = 1;
 
 for( @opt ){
@@ -63,6 +65,18 @@ for( @opt ){
 	};
 	/-simpson/i and do {
 		$Simpson = 1;
+	};
+	/-my-overlap/i and do {
+		$Morisita_Horn = 0;
+		$diff = 0;
+		$ratio = 0;
+		$my_overlap = 1;
+	};
+	/-Jaccard/i and do {
+		$Morisita_Horn = 0;
+		$diff = 0;
+		$ratio = 0;
+		$Jaccard = 1;
 	};
 	/-F(\S+)/ and do {
 		$split = $1;
@@ -130,7 +144,7 @@ while( @FILES ){
 		$debug and print "@{$_}\n" for @{ $data[$file] };
 	}
 	
-	if( !$Morisita_Horn && !$diff && !$ratio ){
+	if( !$Morisita_Horn && !$diff && !$ratio && !$my_overlap && !$Jaccard ){
 		die "No comparison method defined!\n";
 		}
 	
@@ -139,7 +153,7 @@ while( @FILES ){
 	my @sums;
 	
 	#--BEGIN: prepare Morisita-Horn
-	if( $Morisita_Horn ){
+	if( $Morisita_Horn or $my_overlap ){
 		
 		for my $file ( 0 .. 1 ){
 			for my $i ( 1 .. $cols[ $file ] ){
@@ -189,7 +203,20 @@ while( @FILES ){
 		my @line;
 		for my $j ( 1 .. $cols[ 1 ] ){
 			push @line, do {
-				if( $Morisita_Horn ){
+				if( $my_overlap ){
+					my $sum = 0;
+					for my $r ( 0 .. $rows - 1 ){
+						next if $Xi[ 0 ][ $i - 1 ] == 0;
+						next if $Xi[ 1 ][ $j - 1 ] == 0;
+						$sum += 
+							( sort { $a <=> $b } 
+								$data[ 0 ][ $r ][ $i - 1 ] / $Xi[ 0 ][ $i - 1 ],
+								$data[ 1 ][ $r ][ $j - 1 ] / $Xi[ 1 ][ $j - 1 ],
+								)[ 0 ];
+						}
+					1 - $sum;
+					}
+				elsif( $Morisita_Horn ){
 					1 - (
 					$Xi[ 0 ][ $i - 1 ] == 0 || $Xi[ 1 ][ $j - 1 ] == 0 ?
 						0
@@ -198,6 +225,42 @@ while( @FILES ){
 						( ( $lambda_i[ 0 ][ $i - 1 ] + $lambda_i[ 1 ][ $j - 1 ] ) 
 							* $Xi[ 0 ][ $i - 1 ] * $Xi[ 1 ][ $j - 1 ] )
 						)
+					}
+				elsif( $Jaccard ){
+					my $Jaccard_ij = 0;
+					
+					my @row_numbers_to_compare = 1 .. @{ $data[ 0 ] };
+					
+					my $union = 0;
+					my $intersection = 0;
+					
+					for my $row_number ( @row_numbers_to_compare ){
+						$union += ( 
+							$data[ 0 ][ $row_number - 1 ][ $i - 1 ] == 1 ||
+							$data[ 1 ][ $row_number - 1 ][ $j - 1 ] == 1
+							);
+						$intersection += ( 
+							$data[ 0 ][ $row_number - 1 ][ $i - 1 ] == 1 &&
+							$data[ 1 ][ $row_number - 1 ][ $j - 1 ] == 1
+							);
+						
+						die "Non 0-1 values found in Jaccard!\n" if ( 
+							$data[ 0 ][ $row_number - 1 ][ $i - 1 ] != 0 &&
+							$data[ 0 ][ $row_number - 1 ][ $i - 1 ] != 1 
+							or
+							$data[ 1 ][ $row_number - 1 ][ $j - 1 ] != 0 &&
+							$data[ 1 ][ $row_number - 1 ][ $j - 1 ] != 1 
+							);
+						}
+					
+					if( $diff_unvalue_zeroes ){
+						$Jaccard_ij = $union ? $intersection / $union : 0;
+						}
+					else{
+						$Jaccard_ij = $union ? $intersection / $union : 1;
+						}
+					
+					1 - $Jaccard_ij;
 					}
 				elsif( $diff ){
 					my $diff_ij = 0;
