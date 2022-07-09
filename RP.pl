@@ -25,6 +25,7 @@ my $Morisita_Horn = 0;
 my $Simpson = 0;
 my $my_overlap = 0;
 my $Jaccard = 0;
+my $PCM = 0; # poly-cohort matrix
 my $embedding = 1;
 
 for( @opt ){
@@ -77,6 +78,12 @@ for( @opt ){
 		$diff = 0;
 		$ratio = 0;
 		$Jaccard = 1;
+	};
+	/-PCM/i and do {
+		$Morisita_Horn = 0;
+		$diff = 0;
+		$ratio = 0;
+		$PCM = 1;
 	};
 	/-F(\S+)/ and do {
 		$split = $1;
@@ -144,8 +151,12 @@ while( @FILES ){
 		$debug and print "@{$_}\n" for @{ $data[$file] };
 	}
 	
-	if( !$Morisita_Horn && !$diff && !$ratio && !$my_overlap && !$Jaccard ){
+	if( !$Morisita_Horn && !$diff && !$ratio && !$my_overlap && !$Jaccard && !$PCM ){
 		die "No comparison method defined!\n";
+		}
+	
+	if( $PCM and $CRP ){
+		die "PCM (poly-cohort matrix) is only for single series!\n";
 		}
 	
 	my @Xi;
@@ -261,6 +272,53 @@ while( @FILES ){
 						}
 					
 					1 - $Jaccard_ij;
+					}
+				elsif( $PCM ){
+					my $PCM_ij = 0;
+					
+					my @row_numbers_to_compare = 1 .. @{ $data[ 0 ] };
+					
+					my $union = 0;
+					my $poly_cohort = 0;
+					
+					my $poly_cohort_index;
+					
+					if( $j > $i ){
+						$poly_cohort_index = $j;
+						}
+					elsif( $i > $j ){
+						$poly_cohort_index = $j;
+						}
+					else{
+						$poly_cohort_index = $j;
+						}
+					
+					for my $row_number ( @row_numbers_to_compare ){
+						if( $data[ 0 ][ $row_number - 1 ][ 
+								$poly_cohort_index - 1 ] == 1 ){
+							$union ++;
+							$poly_cohort += (
+								$data[ 0 ][ $row_number - 1 ][ $i - 1 ] == 1 
+								);
+							}
+						
+						die "Non 0-1 values found in PCM!\n" if ( 
+							$data[ 0 ][ $row_number - 1 ][ $i - 1 ] != 0 &&
+							$data[ 0 ][ $row_number - 1 ][ $i - 1 ] != 1 
+							or
+							$data[ 1 ][ $row_number - 1 ][ $j - 1 ] != 0 &&
+							$data[ 1 ][ $row_number - 1 ][ $j - 1 ] != 1 
+							);
+						}
+					
+					if( $diff_unvalue_zeroes ){
+						$PCM_ij = $union ? $poly_cohort / $union : 0;
+						}
+					else{
+						$PCM_ij = $union ? $poly_cohort / $union : 1;
+						}
+					
+					1 - $PCM_ij;
 					}
 				elsif( $diff ){
 					my $diff_ij = 0;
