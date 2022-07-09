@@ -19,6 +19,7 @@ my $topbm = 0;
 my $intersection = 1;  # a.k.a. multiplication
 my $union = 0;
 my $difference = 0;
+my $sum = 0;
 
 for( @opt ){
 	/-mult\w*|-intersection/ and do {
@@ -30,6 +31,10 @@ for( @opt ){
 	};
 	/-diff\w*/ and do {
 		$difference = 1;
+		$intersection = 0;
+	};
+	/-sum\w*/ and do {
+		$sum = 1;
 		$intersection = 0;
 	};
 	/-pbm/ and do {
@@ -138,6 +143,16 @@ if( @FILES != 2 ){
 				$data[0][ $i-1 ][ $j-1 ] - 
 				$data[1][ $i-1 ][ $j-1 ];
 				$data[2][ $i-1 ][ $j-1 ] =~ s/^-\d+$/0/;
+				}
+			}
+		}
+	
+	if( $sum ){
+		for my $i ( 1 .. $rows[0] ){
+			for my $j ( 1 .. $cols[0] ){
+				$data[2][ $i-1 ][ $j-1 ] = 
+				$data[0][ $i-1 ][ $j-1 ] + 
+				$data[1][ $i-1 ][ $j-1 ];
 				}
 			}
 		}
