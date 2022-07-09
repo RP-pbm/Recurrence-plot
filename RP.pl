@@ -25,6 +25,7 @@ my $Morisita_Horn = 0;
 my $Simpson = 0;
 my $my_overlap = 0;
 my $Jaccard = 0;
+my $Sorensen = 0;
 my $PCM = 0; # poly-cohort matrix
 my $embedding = 1;
 
@@ -78,6 +79,12 @@ for( @opt ){
 		$diff = 0;
 		$ratio = 0;
 		$Jaccard = 1;
+	};
+	/-Sorensen/i and do {
+		$Morisita_Horn = 0;
+		$diff = 0;
+		$ratio = 0;
+		$Sorensen = 1;
 	};
 	/-PCM/i and do {
 		$Morisita_Horn = 0;
@@ -151,7 +158,7 @@ while( @FILES ){
 		$debug and print "@{$_}\n" for @{ $data[$file] };
 	}
 	
-	if( !$Morisita_Horn && !$diff && !$ratio && !$my_overlap && !$Jaccard && !$PCM ){
+	if( !$Morisita_Horn && !$diff && !$ratio && !$my_overlap && !$Jaccard &&!$Sorensen && !$PCM ){
 		die "No comparison method defined!\n";
 		}
 	
@@ -272,6 +279,42 @@ while( @FILES ){
 						}
 					
 					1 - $Jaccard_ij;
+					}
+				elsif( $Sorensen ){
+					my $Sorensen_ij = 0;
+					
+					my @row_numbers_to_compare = 1 .. @{ $data[ 0 ] };
+					
+					my $sum = 0;
+					my $intersection = 0;
+					
+					for my $row_number ( @row_numbers_to_compare ){
+						$sum += ( 
+							$data[ 0 ][ $row_number - 1 ][ $i - 1 ] +
+							$data[ 1 ][ $row_number - 1 ][ $j - 1 ]
+							);
+						$intersection += ( 
+							$data[ 0 ][ $row_number - 1 ][ $i - 1 ] == 1 &&
+							$data[ 1 ][ $row_number - 1 ][ $j - 1 ] == 1
+							);
+						
+						die "Non 0-1 values found in Sorensen!\n" if ( 
+							$data[ 0 ][ $row_number - 1 ][ $i - 1 ] != 0 &&
+							$data[ 0 ][ $row_number - 1 ][ $i - 1 ] != 1 
+							or
+							$data[ 1 ][ $row_number - 1 ][ $j - 1 ] != 0 &&
+							$data[ 1 ][ $row_number - 1 ][ $j - 1 ] != 1 
+							);
+						}
+					
+					if( $diff_unvalue_zeroes ){
+						$Sorensen_ij = $sum ? 2 * $intersection / $sum : 0;
+						}
+					else{
+						$Sorensen_ij = $sum ? 2 * $intersection / $sum : 1;
+						}
+					
+					1 - $Sorensen_ij; # Note it does not satisfy the triangle inequality.
 					}
 				elsif( $PCM ){
 					my $PCM_ij = 0;
