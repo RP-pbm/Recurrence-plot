@@ -1,0 +1,1 @@
+./set_operations.pl: [tests/set_operations-003.tst] -diffs can't be used without set names!
