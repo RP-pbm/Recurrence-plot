@@ -190,7 +190,10 @@ for( @FILES ){
 	shift @{$_} for @DTW;
 	
 	if( $print_synch_coords ){
-		print join $join, map "[@{$_}]", @synch_line;
+		print join $join, map $_->[ 0 ], reverse @synch_line;
+		print "\n";
+		print join $join, map $_->[ 1 ], reverse @synch_line;
+		print "\n";
 		next;
 		}
 	
