@@ -50,7 +50,7 @@ for( @opt ){
 open my $dict_file, '<', $dict or die "$0: [$dict] ... : $!\n";
 my %change_name;
 while(<$dict_file>){
-	my( $key, $value ) = split;
+	my( $key, $value ) = split $split;
 	$change_name{ $key } = $value;
     }
 
